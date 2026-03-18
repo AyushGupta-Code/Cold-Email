@@ -1,12 +1,15 @@
-import { FormEvent, startTransition, useEffect, useState } from "react";
+import { FormEvent, startTransition, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "../components/AppShell";
 import { ContactCard } from "../components/ContactCard";
 import { EmptyState } from "../components/EmptyState";
 import { ExportActions } from "../components/ExportActions";
 import { FormSection } from "../components/FormSection";
+import { SectionCard } from "../components/SectionCard";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { StageProgress } from "../components/StageProgress";
+import { StatusBadge } from "../components/StatusBadge";
+import { SummaryBanner } from "../components/SummaryBanner";
 import { analyzeApplication, regenerateEmail, sendEmail } from "../lib/api";
 import { defaultSettings, loadSettings, saveSettings } from "../lib/storage";
 import { toRuntimeSettingsPayload } from "../lib/utils";
@@ -21,9 +24,7 @@ export function HomePage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<AnalyzeResponse | null>(null);
   const [settings, setSettings] = useState<SettingsFormValues>(() => {
-    if (typeof window === "undefined") {
-      return defaultSettings;
-    }
+    if (typeof window === "undefined") return defaultSettings;
     return loadSettings();
   });
   const [manualRecipients, setManualRecipients] = useState<Record<string, string>>({});
@@ -146,10 +147,11 @@ export function HomePage() {
   }
 
   const smtpConfigured = settings.smtpEnabled && Boolean(settings.smtpHost.trim()) && Boolean(settings.smtpSenderEmail.trim());
+  const verifiedEmailCount = useMemo(() => results?.contacts.filter((contact) => Boolean(contact.public_email)).length ?? 0, [results]);
 
   return (
     <AppShell>
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)] xl:items-start">
         <FormSection
           companyName={companyName}
           position={position}
@@ -167,58 +169,57 @@ export function HomePage() {
       <StageProgress active={loading} />
 
       {results ? (
-        <>
-          <section className="panel p-6 md:p-8">
-            <div className="grid gap-6 md:grid-cols-[1.15fr_0.85fr]">
-              <div>
-                <p className="font-display text-sm uppercase tracking-[0.32em] text-spruce">Results</p>
-                <h2 className="mt-3 font-display text-3xl text-ink">
-                  {results.contacts.length} contact{results.contacts.length === 1 ? "" : "s"} surfaced for {results.normalized_job_summary.company_name}
-                </h2>
-                <p className="mt-3 text-sm text-slatewarm">{results.normalized_job_summary.concise_summary}</p>
-              </div>
-              <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-                <p className="font-display text-lg text-ink">Warnings and limitations</p>
-                <div className="mt-3 space-y-2 text-sm text-slatewarm">
-                  {results.warnings.length ? results.warnings.map((warning) => <p key={warning}>{warning}</p>) : <p>No warnings reported.</p>}
-                </div>
-              </div>
-            </div>
-          </section>
+        <div className="space-y-6">
+          <SectionCard
+            eyebrow="Step 3"
+            title={`Review results for ${results.normalized_job_summary.company_name}`}
+            description={results.normalized_job_summary.concise_summary}
+            actions={<StatusBadge label={`${results.contacts.length} contact${results.contacts.length === 1 ? "" : "s"}`} tone="accent" />}
+          >
+            <SummaryBanner
+              contactCount={results.contacts.length}
+              verifiedEmailCount={verifiedEmailCount}
+              warnings={results.warnings}
+            />
+          </SectionCard>
 
           {results.contacts.length > 0 ? <ExportActions contacts={results.contacts} emails={results.generated_emails} /> : null}
 
           {results.contacts.length === 0 ? (
             <EmptyState warnings={results.warnings} />
           ) : (
-            <div className="grid gap-6">
-              {results.contacts.map((contact) => {
-                const key = String(contact.id ?? contact.profile_url);
-                const draft = results.generated_emails.find((item) => item.contact_id === contact.id);
-                return (
-                  <div key={key} className="grid gap-2">
-                    <ContactCard
-                      contact={contact}
-                      emailDraft={draft}
-                      manualRecipient={manualRecipients[key] ?? ""}
-                      smtpConfigured={smtpConfigured}
-                      sending={Boolean(sendingIds[key])}
-                      onRecipientChange={(value) => setManualRecipients((current) => ({ ...current, [key]: value }))}
-                      onDraftChange={(field, value) => updateDraft(contact.id, field, value)}
-                      onRegenerate={() => handleRegenerate(contact)}
-                      onSend={() => handleSend(contact, draft)}
-                    />
-                    {sendStatus[key] ? (
-                      <p className="px-2 text-sm text-slatewarm">{sendStatus[key]}</p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
+            <SectionCard
+              eyebrow="Step 4"
+              title="Review contacts and draft emails"
+              description="Primary details stay visible up front, while evidence, source links, and score reasoning are tucked into on-demand disclosure blocks."
+            >
+              <div className="grid gap-5">
+                {results.contacts.map((contact) => {
+                  const key = String(contact.id ?? contact.profile_url);
+                  const draft = results.generated_emails.find((item) => item.contact_id === contact.id);
+                  return (
+                    <div key={key} className="space-y-2">
+                      <ContactCard
+                        contact={contact}
+                        emailDraft={draft}
+                        manualRecipient={manualRecipients[key] ?? ""}
+                        smtpConfigured={smtpConfigured}
+                        sending={Boolean(sendingIds[key])}
+                        onRecipientChange={(value) => setManualRecipients((current) => ({ ...current, [key]: value }))}
+                        onDraftChange={(field, value) => updateDraft(contact.id, field, value)}
+                        onRegenerate={() => handleRegenerate(contact)}
+                        onSend={() => handleSend(contact, draft)}
+                      />
+                      {sendStatus[key] ? <p className="px-1 text-sm text-slate-500">{sendStatus[key]}</p> : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </SectionCard>
           )}
-        </>
+        </div>
       ) : (
-        <EmptyState warnings={errors.length ? errors : ["Run the main form to search public contacts and draft emails."]} />
+        <EmptyState warnings={errors} />
       )}
     </AppShell>
   );
