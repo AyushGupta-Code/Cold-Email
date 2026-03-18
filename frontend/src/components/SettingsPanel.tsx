@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { testOllama, testSmtp } from "../lib/api";
 import type { SettingsFormValues } from "../types/api";
+import { SectionCard } from "./SectionCard";
+import { StatusBadge } from "./StatusBadge";
 
 interface SettingsPanelProps {
   values: SettingsFormValues;
@@ -12,6 +14,17 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
   const [ollamaStatus, setOllamaStatus] = useState<string>("");
   const [smtpStatus, setSmtpStatus] = useState<string>("");
   const [loading, setLoading] = useState<"" | "ollama" | "smtp">("");
+  const [open, setOpen] = useState(false);
+
+  const ollamaTone = useMemo(() => {
+    if (!ollamaStatus) return "neutral" as const;
+    return /ok|connected|ready|success/i.test(ollamaStatus) ? "success" : "warning";
+  }, [ollamaStatus]);
+
+  const smtpTone = useMemo(() => {
+    if (!smtpStatus) return values.smtpEnabled ? "warning" as const : "neutral" as const;
+    return /ok|connected|ready|success/i.test(smtpStatus) ? "success" : "warning";
+  }, [smtpStatus, values.smtpEnabled]);
 
   async function handleTestOllama() {
     setLoading("ollama");
@@ -47,98 +60,105 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
   }
 
   return (
-    <section className="panel p-6 md:p-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-display text-2xl text-ink">Settings</h2>
-          <p className="mt-2 text-sm text-slatewarm">
-            Ollama is required for draft generation. SMTP is optional and only used after manual review.
-          </p>
+    <SectionCard
+      eyebrow="Step 2"
+      title="Optional local settings"
+      description="Keep configuration accessible but secondary. Ollama powers draft generation. SMTP is optional and only used after manual review."
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <StatusBadge label={values.ollamaModel ? `Model: ${values.ollamaModel}` : "Ollama not set"} tone="accent" />
+          <StatusBadge label={values.smtpEnabled ? "SMTP enabled" : "SMTP optional"} tone={values.smtpEnabled ? "warning" : "neutral"} />
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slatewarm">
-          Local only
-        </span>
-      </div>
+      }
+    >
+      <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+        <button className="flex w-full items-center justify-between gap-4 text-left" onClick={() => setOpen((current) => !current)} type="button">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Connection settings</p>
+            <p className="mt-1 text-sm text-slate-500">Expand to test your local Ollama instance and optional SMTP configuration.</p>
+          </div>
+          <span className="button-secondary !rounded-2xl">{open ? "Hide settings" : "Show settings"}</span>
+        </button>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[28px] border border-slate-200 p-5">
-          <h3 className="font-display text-lg">Ollama</h3>
-          <label className="mt-4 block text-sm font-medium">
-            Ollama base URL
-            <input className="field" value={values.ollamaBaseUrl} onChange={(event) => onChange("ollamaBaseUrl", event.target.value)} />
-          </label>
-          <label className="mt-4 block text-sm font-medium">
-            Ollama model name
-            <input className="field" value={values.ollamaModel} onChange={(event) => onChange("ollamaModel", event.target.value)} />
-          </label>
-          <label className="mt-4 block text-sm font-medium">
-            Temperature
-            <input className="field" value={values.ollamaTemperature} onChange={(event) => onChange("ollamaTemperature", event.target.value)} />
-          </label>
-          <div className="mt-4 flex items-center gap-3">
-            <button className="button-secondary" disabled={loading === "ollama"} onClick={handleTestOllama} type="button">
-              {loading === "ollama" ? "Testing..." : "Test connection"}
-            </button>
-            {ollamaStatus ? <span className="text-sm text-slatewarm">{ollamaStatus}</span> : null}
-          </div>
-        </div>
+        {open ? (
+          <div className="mt-5 grid gap-5 xl:grid-cols-2">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-950">Ollama</h3>
+                  <p className="mt-1 text-sm text-slate-500">Required for generating local email drafts.</p>
+                </div>
+                <StatusBadge label={ollamaStatus || "Not tested yet"} tone={ollamaTone} />
+              </div>
+              <div className="mt-5 grid gap-4">
+                <Input label="Base URL" value={values.ollamaBaseUrl} onChange={(value) => onChange("ollamaBaseUrl", value)} />
+                <Input label="Model name" value={values.ollamaModel} onChange={(value) => onChange("ollamaModel", value)} />
+                <Input label="Temperature" value={values.ollamaTemperature} onChange={(value) => onChange("ollamaTemperature", value)} />
+              </div>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button className="button-secondary" disabled={loading === "ollama"} onClick={handleTestOllama} type="button">
+                  {loading === "ollama" ? "Testing..." : "Test Ollama"}
+                </button>
+              </div>
+            </div>
 
-        <div className="rounded-[28px] border border-slate-200 p-5">
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="font-display text-lg">SMTP</h3>
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <input
-                checked={values.smtpEnabled}
-                onChange={(event) => onChange("smtpEnabled", event.target.checked)}
-                type="checkbox"
-              />
-              Optional send support
-            </label>
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-950">SMTP</h3>
+                  <p className="mt-1 text-sm text-slate-500">Optional send support after manual review.</p>
+                </div>
+                <StatusBadge label={smtpStatus || (values.smtpEnabled ? "Enabled but untested" : "Disabled")} tone={smtpTone} />
+              </div>
+
+              <label className="mt-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                <input checked={values.smtpEnabled} onChange={(event) => onChange("smtpEnabled", event.target.checked)} type="checkbox" />
+                Enable SMTP for manual sends
+              </label>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <Input label="Host" value={values.smtpHost} onChange={(value) => onChange("smtpHost", value)} />
+                <Input label="Port" value={values.smtpPort} onChange={(value) => onChange("smtpPort", value)} />
+                <Input label="Username" value={values.smtpUsername} onChange={(value) => onChange("smtpUsername", value)} />
+                <Input label="Password / app password" type="password" value={values.smtpPassword} onChange={(value) => onChange("smtpPassword", value)} />
+                <div className="md:col-span-2">
+                  <Input label="Sender email" value={values.smtpSenderEmail} onChange={(value) => onChange("smtpSenderEmail", value)} />
+                </div>
+              </div>
+
+              <label className="mt-4 flex items-center gap-3 text-sm font-medium text-slate-700">
+                <input checked={values.smtpUseTls} onChange={(event) => onChange("smtpUseTls", event.target.checked)} type="checkbox" />
+                Use STARTTLS
+              </label>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button className="button-secondary" disabled={loading === "smtp"} onClick={handleTestSmtp} type="button">
+                  {loading === "smtp" ? "Testing..." : "Test SMTP"}
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="block text-sm font-medium">
-              Host
-              <input className="field" value={values.smtpHost} onChange={(event) => onChange("smtpHost", event.target.value)} />
-            </label>
-            <label className="block text-sm font-medium">
-              Port
-              <input className="field" value={values.smtpPort} onChange={(event) => onChange("smtpPort", event.target.value)} />
-            </label>
-            <label className="block text-sm font-medium">
-              Username
-              <input className="field" value={values.smtpUsername} onChange={(event) => onChange("smtpUsername", event.target.value)} />
-            </label>
-            <label className="block text-sm font-medium">
-              Password / app password
-              <input
-                className="field"
-                type="password"
-                value={values.smtpPassword}
-                onChange={(event) => onChange("smtpPassword", event.target.value)}
-              />
-            </label>
-            <label className="block text-sm font-medium md:col-span-2">
-              Sender email
-              <input
-                className="field"
-                value={values.smtpSenderEmail}
-                onChange={(event) => onChange("smtpSenderEmail", event.target.value)}
-              />
-            </label>
-          </div>
-          <label className="mt-4 flex items-center gap-2 text-sm font-medium">
-            <input checked={values.smtpUseTls} onChange={(event) => onChange("smtpUseTls", event.target.checked)} type="checkbox" />
-            Use STARTTLS
-          </label>
-          <div className="mt-4 flex items-center gap-3">
-            <button className="button-secondary" disabled={loading === "smtp"} onClick={handleTestSmtp} type="button">
-              {loading === "smtp" ? "Testing..." : "Test connection"}
-            </button>
-            {smtpStatus ? <span className="text-sm text-slatewarm">{smtpStatus}</span> : null}
-          </div>
-        </div>
+        ) : null}
       </div>
-    </section>
+    </SectionCard>
   );
 }
 
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <label className="block text-sm font-medium text-slate-900">
+      {label}
+      <input className="field" type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  );
+}
