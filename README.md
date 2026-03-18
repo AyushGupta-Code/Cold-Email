@@ -101,8 +101,8 @@ cd /mnt/c/Users/ayush/Desktop/Projects/Cold-Email
 ### 2. Backend setup
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+conda create -n cold-email python=3.12 -y
+conda activate cold-email
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 cp backend/.env.example backend/.env
@@ -142,7 +142,7 @@ npm install
 
 ```bash
 cd /mnt/c/Users/ayush/Desktop/Projects/Cold-Email
-source .venv/bin/activate
+conda activate cold-email
 uvicorn app.main:app --reload --app-dir backend
 ```
 
@@ -159,7 +159,7 @@ Open `http://localhost:5173`.
 
 ```bash
 cd /mnt/c/Users/ayush/Desktop/Projects/Cold-Email
-source .venv/bin/activate
+conda activate cold-email
 PYTHONPATH=backend pytest backend/app/tests --capture=sys
 ```
 
