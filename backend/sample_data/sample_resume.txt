@@ -1,0 +1,22 @@
+Jordan Rivera
+Austin, TX
+jordan.rivera.dev@example.dev
+
+Summary
+Full-stack engineer with 5+ years of experience building internal platforms, recruiter tooling, and automation workflows.
+
+Skills
+Python, FastAPI, React, TypeScript, SQLAlchemy, PostgreSQL, Docker, Pytest, Tailwind CSS, AWS, Retrieval, NLP
+
+Experience
+- Built a recruiter workflow dashboard in React and FastAPI that reduced manual sourcing time by 30 percent.
+- Shipped a resume ranking service using sentence-transformers and heuristic scoring for talent teams.
+- Implemented SMTP-based outbound review tooling with audit logs and admin controls.
+
+Projects
+- Local-first application assistant using Ollama, vector similarity, and SQLite.
+- Search enrichment utility that merged public web results with lightweight page parsing.
+
+Education
+B.S. Computer Science, University of Texas at Austin
+

@@ -1,0 +1,18 @@
+Draft a personalized outreach email.
+
+Contact:
+- Name: {contact_name}
+- Title: {contact_title}
+
+Target:
+- Company: {company_name}
+- Position: {position}
+- Job summary: {job_summary}
+
+Candidate:
+- Name: {resume_name}
+- Relevant resume highlights:
+{resume_highlights}
+
+Return JSON only.
+

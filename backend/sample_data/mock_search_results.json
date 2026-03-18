@@ -1,0 +1,18 @@
+[
+  {
+    "query": "Acme recruiter United States linkedin",
+    "results": [
+      {
+        "title": "Jamie Carter - Senior Recruiter - Acme | LinkedIn",
+        "snippet": "Austin, TX. Senior Recruiter at Acme focused on engineering hiring across the United States.",
+        "url": "https://www.linkedin.com/in/jamie-carter-acme"
+      },
+      {
+        "title": "Taylor Kim - Talent Acquisition Partner - Acme | LinkedIn",
+        "snippet": "San Francisco, CA. Talent Acquisition Partner supporting software engineering hiring at Acme.",
+        "url": "https://www.linkedin.com/in/taylor-kim-acme"
+      }
+    ]
+  }
+]
+
