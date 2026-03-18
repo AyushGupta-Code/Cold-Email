@@ -161,7 +161,7 @@ export function HomePage() {
 
   return (
     <AppShell>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,0.9fr)] xl:items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.28fr)_380px] 2xl:grid-cols-[minmax(0,1.35fr)_420px] xl:items-start">
         <FormSection
           companyName={companyName}
           position={position}

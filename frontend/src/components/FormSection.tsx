@@ -26,6 +26,13 @@ export function FormSection(props: FormSectionProps) {
       actions={<StatusBadge label="4 required inputs" tone="accent" />}
     >
       <form className="grid gap-7" onSubmit={onSubmit}>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <QuickInput step="01" label="Company" detail="Target organization" />
+          <QuickInput step="02" label="Position" detail="Role title and scope" />
+          <QuickInput step="03" label="Job description" detail="Source material for ranking" />
+          <QuickInput step="04" label="Resume" detail="Candidate context" />
+        </div>
+
         <div className="grid gap-5 md:grid-cols-2">
           <Field label="Company name" hint="Target company for recruiter discovery.">
             <input className="field" placeholder="Acme Labs" value={companyName} onChange={(event) => onChange("companyName", event.target.value)} />
@@ -68,7 +75,7 @@ export function FormSection(props: FormSectionProps) {
           </div>
         ) : null}
 
-        <div className="grid gap-4 rounded-[28px] border border-slate-200 bg-stone-50/75 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div className="grid gap-4 rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,251,235,0.92),rgba(255,255,255,0.98))] p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Primary action</p>
             <p className="mt-2 text-lg font-semibold text-slate-950">Find contacts and generate editable draft emails.</p>
@@ -94,5 +101,15 @@ function Field({ label, hint, children }: { label: string; hint: string; childre
       <p className="mt-1 text-sm leading-6 text-slate-600">{hint}</p>
       {children}
     </label>
+  );
+}
+
+function QuickInput({ step, label, detail }: { step: string; label: string; detail: string }) {
+  return (
+    <div className="rounded-[22px] border border-slate-200 bg-stone-50/85 px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">{step}</p>
+      <p className="mt-2 text-sm font-semibold text-slate-950">{label}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{detail}</p>
+    </div>
   );
 }

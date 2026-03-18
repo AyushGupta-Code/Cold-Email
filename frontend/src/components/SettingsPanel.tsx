@@ -15,6 +15,7 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
   const [smtpStatus, setSmtpStatus] = useState<string>("");
   const [loading, setLoading] = useState<"" | "ollama" | "smtp">("");
   const [open, setOpen] = useState(false);
+  const compactBaseUrl = values.ollamaBaseUrl.replace(/^https?:\/\//, "") || "Not set";
 
   const ollamaTone = useMemo(() => {
     if (!ollamaStatus) return "neutral" as const;
@@ -61,9 +62,10 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
 
   return (
     <SectionCard
+      className="xl:sticky xl:top-6"
       eyebrow="Step 2"
-      title="Optional local settings"
-      description="Keep configuration accessible but secondary. Ollama powers draft generation. SMTP is optional and only used after manual review."
+      title="Local settings"
+      description="Ollama powers draft generation. SMTP remains optional until you explicitly review and send a draft."
       actions={
         <div className="flex flex-wrap gap-2">
           <StatusBadge label={values.ollamaModel ? `Model: ${values.ollamaModel}` : "Ollama not set"} tone="accent" />
@@ -71,17 +73,28 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
         </div>
       }
     >
-      <div className="rounded-[28px] border border-slate-200 bg-stone-50/80 p-5">
-        <button className="flex w-full items-center justify-between gap-4 text-left" onClick={() => setOpen((current) => !current)} type="button">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">Connection settings</p>
-            <p className="mt-1 text-sm leading-6 text-slate-600">Expand to test your local Ollama instance and optional SMTP configuration.</p>
+      <div className="space-y-4">
+        <div className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,rgba(247,239,225,0.92),rgba(255,255,255,0.98))] p-5">
+          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+            <SummaryStat label="Local model" value={values.ollamaModel || "Not set"} helper="Draft generation" />
+            <SummaryStat label="Ollama URL" value={compactBaseUrl} helper="Connection target" />
+            <SummaryStat label="SMTP" value={values.smtpEnabled ? "Enabled" : "Disabled"} helper="Manual send support" />
           </div>
-          <span className="button-secondary !rounded-2xl">{open ? "Hide settings" : "Show settings"}</span>
-        </button>
+          <button
+            className="mt-4 flex w-full items-center justify-between gap-4 rounded-[24px] border border-slate-200 bg-white/90 px-4 py-4 text-left transition hover:border-amber-300 hover:bg-amber-50/70"
+            onClick={() => setOpen((current) => !current)}
+            type="button"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Connection settings</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">Expand to test your local Ollama instance and optional SMTP configuration.</p>
+            </div>
+            <span className="button-secondary !rounded-2xl">{open ? "Hide settings" : "Show settings"}</span>
+          </button>
+        </div>
 
         {open ? (
-          <div className="mt-6 grid gap-5 xl:grid-cols-2">
+          <div className="grid gap-5 xl:grid-cols-1 2xl:grid-cols-2">
             <div className="rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -141,6 +154,16 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
         ) : null}
       </div>
     </SectionCard>
+  );
+}
+
+function SummaryStat({ label, value, helper }: { label: string; value: string; helper: string }) {
+  return (
+    <div className="rounded-[22px] border border-slate-200 bg-white/85 px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-slate-950">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-slate-600">{helper}</p>
+    </div>
   );
 }
 
