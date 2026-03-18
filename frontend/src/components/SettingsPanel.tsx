@@ -71,22 +71,22 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
         </div>
       }
     >
-      <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4">
+      <div className="rounded-[28px] border border-slate-200 bg-stone-50/80 p-5">
         <button className="flex w-full items-center justify-between gap-4 text-left" onClick={() => setOpen((current) => !current)} type="button">
           <div>
             <p className="text-sm font-semibold text-slate-900">Connection settings</p>
-            <p className="mt-1 text-sm text-slate-500">Expand to test your local Ollama instance and optional SMTP configuration.</p>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Expand to test your local Ollama instance and optional SMTP configuration.</p>
           </div>
           <span className="button-secondary !rounded-2xl">{open ? "Hide settings" : "Show settings"}</span>
         </button>
 
         {open ? (
-          <div className="mt-5 grid gap-5 xl:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mt-6 grid gap-5 xl:grid-cols-2">
+            <div className="rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-950">Ollama</h3>
-                  <p className="mt-1 text-sm text-slate-500">Required for generating local email drafts.</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">Required for generating local email drafts.</p>
                 </div>
                 <StatusBadge label={ollamaStatus || "Not tested yet"} tone={ollamaTone} />
               </div>
@@ -102,16 +102,16 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-950">SMTP</h3>
-                  <p className="mt-1 text-sm text-slate-500">Optional send support after manual review.</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">Optional send support after manual review.</p>
                 </div>
                 <StatusBadge label={smtpStatus || (values.smtpEnabled ? "Enabled but untested" : "Disabled")} tone={smtpTone} />
               </div>
 
-              <label className="mt-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+              <label className="mt-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-stone-50/80 px-4 py-3 text-sm font-medium text-slate-800">
                 <input checked={values.smtpEnabled} onChange={(event) => onChange("smtpEnabled", event.target.checked)} type="checkbox" />
                 Enable SMTP for manual sends
               </label>
@@ -126,7 +126,7 @@ export function SettingsPanel({ values, onChange }: SettingsPanelProps) {
                 </div>
               </div>
 
-              <label className="mt-4 flex items-center gap-3 text-sm font-medium text-slate-700">
+              <label className="mt-4 flex items-center gap-3 text-sm font-medium text-slate-800">
                 <input checked={values.smtpUseTls} onChange={(event) => onChange("smtpUseTls", event.target.checked)} type="checkbox" />
                 Use STARTTLS
               </label>

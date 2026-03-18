@@ -15,6 +15,16 @@ import { defaultSettings, loadSettings, saveSettings } from "../lib/storage";
 import { toRuntimeSettingsPayload } from "../lib/utils";
 import type { AnalyzeResponse, ContactCandidate, GeneratedEmailPayload, SettingsFormValues } from "../types/api";
 
+function statusMessageClass(message: string) {
+  if (/sent|success|delivered|ok/i.test(message)) {
+    return "border-emerald-300 bg-emerald-50 text-emerald-800";
+  }
+  if (/failed|error|required|invalid/i.test(message)) {
+    return "border-rose-300 bg-rose-50 text-rose-800";
+  }
+  return "border-slate-300 bg-slate-50 text-slate-700";
+}
+
 export function HomePage() {
   const [companyName, setCompanyName] = useState("");
   const [position, setPosition] = useState("");
@@ -151,7 +161,7 @@ export function HomePage() {
 
   return (
     <AppShell>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)] xl:items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(340px,0.9fr)] xl:items-start">
         <FormSection
           companyName={companyName}
           position={position}
@@ -169,7 +179,7 @@ export function HomePage() {
       <StageProgress active={loading} />
 
       {results ? (
-        <div className="space-y-6">
+        <div className="space-y-6 lg:space-y-7">
           <SectionCard
             eyebrow="Step 3"
             title={`Review results for ${results.normalized_job_summary.company_name}`}
@@ -198,7 +208,7 @@ export function HomePage() {
                   const key = String(contact.id ?? contact.profile_url);
                   const draft = results.generated_emails.find((item) => item.contact_id === contact.id);
                   return (
-                    <div key={key} className="space-y-2">
+                    <div key={key} className="space-y-3">
                       <ContactCard
                         contact={contact}
                         emailDraft={draft}
@@ -210,7 +220,9 @@ export function HomePage() {
                         onRegenerate={() => handleRegenerate(contact)}
                         onSend={() => handleSend(contact, draft)}
                       />
-                      {sendStatus[key] ? <p className="px-1 text-sm text-slate-500">{sendStatus[key]}</p> : null}
+                      {sendStatus[key] ? (
+                        <p className={`rounded-[20px] border px-4 py-3 text-sm leading-6 ${statusMessageClass(sendStatus[key])}`}>{sendStatus[key]}</p>
+                      ) : null}
                     </div>
                   );
                 })}

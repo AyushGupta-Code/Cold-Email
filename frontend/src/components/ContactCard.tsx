@@ -24,9 +24,9 @@ export function ContactCard(props: ContactCardProps) {
   const hasEmail = Boolean(contact.public_email);
 
   return (
-    <article className="panel overflow-hidden p-5 md:p-6">
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-        <div className="min-w-0 flex-1 space-y-5">
+    <article className="panel overflow-hidden p-0">
+      <div className="grid gap-0 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+        <div className="min-w-0 space-y-5 px-5 py-5 md:px-6 md:py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -34,19 +34,27 @@ export function ContactCard(props: ContactCardProps) {
                 <StatusBadge label={`${contact.score.toFixed(1)} score`} tone="accent" />
                 <StatusBadge label={hasEmail ? "Public email found" : "No public email"} tone={hasEmail ? "success" : "neutral"} />
               </div>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">{contact.full_name}</h3>
-              <p className="mt-1 text-base text-slate-600">{contact.title}</p>
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
-                <span>{contact.company}</span>
-                <span>{contact.location}</span>
-                <a className="font-medium text-teal-700 hover:text-teal-800" href={contact.profile_url} rel="noreferrer" target="_blank">
+              <h3 className="mt-4 text-[2rem] font-semibold leading-tight text-slate-950">{contact.full_name}</h3>
+              <p className="mt-2 text-lg font-medium text-slate-700">{contact.title}</p>
+              <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                <InfoChip>{contact.company}</InfoChip>
+                <InfoChip>{contact.location}</InfoChip>
+                <a
+                  className="inline-flex items-center rounded-full border border-teal-300 bg-teal-50 px-3 py-1.5 font-medium text-teal-800 transition hover:border-teal-400 hover:bg-teal-100"
+                  href={contact.profile_url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
                   View public profile
                 </a>
               </div>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 lg:min-w-[220px]">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Verified public email</p>
-              <p className="mt-2 break-all text-sm font-medium text-slate-900">{contact.public_email || "Not found from public sources"}</p>
+            <div className="rounded-[24px] border border-slate-200 bg-stone-50/85 px-4 py-4 lg:min-w-[240px]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Verified public email</p>
+              <p className="mt-2 break-all text-sm font-semibold leading-6 text-slate-950">{contact.public_email || "Not found from public sources"}</p>
+              <p className="mt-3 text-xs leading-5 text-slate-600">
+                {hasEmail ? "Used as the default recipient unless you override it below." : "No verified public address was recovered from the gathered sources."}
+              </p>
             </div>
           </div>
 
@@ -92,12 +100,13 @@ export function ContactCard(props: ContactCardProps) {
           </div>
         </div>
 
-        <div className="w-full xl:max-w-xl">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="border-t border-slate-200/90 bg-[linear-gradient(180deg,rgba(247,239,225,0.9),rgba(255,255,255,0.96))] px-5 py-5 md:px-6 md:py-6 xl:border-l xl:border-t-0">
+          <div className="flex h-full flex-col gap-5 rounded-[30px] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur-sm">
+            <div className="flex flex-col gap-4 border-b border-slate-300/80 pb-5 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Draft email</p>
-                <p className="mt-1 text-sm text-slate-500">Review, edit, and copy before sending.</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Draft email</p>
+                <h4 className="mt-2 text-2xl font-semibold text-slate-950">Edit before sending</h4>
+                <p className="mt-2 text-sm leading-6 text-slate-700">The draft stays editable here. Copy it, refine it, or regenerate it before any send action.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button className="button-secondary" onClick={() => copyText(emailDraft?.subject ?? "")} type="button">
@@ -113,13 +122,15 @@ export function ContactCard(props: ContactCardProps) {
             </div>
 
             <div className="mt-4 space-y-4">
-              <label className="block text-sm font-medium text-slate-900">
+              <label className="block text-sm font-semibold text-slate-950">
                 Subject
+                <p className="mt-1 text-sm font-normal leading-6 text-slate-600">Keep the first-touch subject line brief and specific.</p>
                 <input className="field" value={emailDraft?.subject ?? ""} onChange={(event) => onDraftChange("subject", event.target.value)} />
               </label>
 
-              <label className="block text-sm font-medium text-slate-900">
+              <label className="block text-sm font-semibold text-slate-950">
                 Email body
+                <p className="mt-1 text-sm font-normal leading-6 text-slate-600">Review tone, specificity, and claims before copying or sending.</p>
                 <textarea
                   className="field min-h-[260px] resize-y"
                   value={emailDraft?.body ?? ""}
@@ -127,11 +138,11 @@ export function ContactCard(props: ContactCardProps) {
                 />
               </label>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-[24px] border border-slate-200 bg-stone-50/85 p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Recipient override</p>
-                    <p className="mt-1 text-sm text-slate-500">Secondary control for manual send review. Leave blank to use the verified public email when available.</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-700">Leave blank to use the verified public email when available, or type a manually verified public address.</p>
                   </div>
                   <StatusBadge label={activeRecipient ? "Recipient ready" : "Recipient missing"} tone={activeRecipient ? "success" : "warning"} />
                 </div>
@@ -147,16 +158,18 @@ export function ContactCard(props: ContactCardProps) {
                       {sending ? "Sending..." : "Send email"}
                     </button>
                   ) : (
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm font-medium text-slate-700">
                       {smtpConfigured ? "Add a recipient email to enable sending." : "Configure SMTP to enable sending."}
                     </span>
                   )}
-                  <span className="text-sm text-slate-500">Active recipient: {activeRecipient || "None"}</span>
+                  <span className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700">
+                    Active recipient: {activeRecipient || "None"}
+                  </span>
                 </div>
               </div>
 
               {warnings.length ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
+                <div className="rounded-[24px] border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
                   {warnings.map((warning) => (
                     <p key={warning}>• {warning}</p>
                   ))}
@@ -172,9 +185,13 @@ export function ContactCard(props: ContactCardProps) {
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
-      <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
+    <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">{label}</p>
+      <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">{value}</p>
     </div>
   );
+}
+
+function InfoChip({ children }: { children: string }) {
+  return <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700">{children}</span>;
 }

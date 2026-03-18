@@ -22,10 +22,10 @@ export function FormSection(props: FormSectionProps) {
     <SectionCard
       eyebrow="Step 1"
       title="Enter the role details"
-      description="Provide exactly four required inputs so the app can normalize the role, parse the resume, find public contacts, and draft local outreach emails."
+      description="Provide the four required inputs so the app can normalize the role, parse the resume, find public contacts, and draft local outreach emails with better source grounding."
       actions={<StatusBadge label="4 required inputs" tone="accent" />}
     >
-      <form className="grid gap-6" onSubmit={onSubmit}>
+      <form className="grid gap-7" onSubmit={onSubmit}>
         <div className="grid gap-5 md:grid-cols-2">
           <Field label="Company name" hint="Target company for recruiter discovery.">
             <input className="field" placeholder="Acme Labs" value={companyName} onChange={(event) => onChange("companyName", event.target.value)} />
@@ -45,10 +45,10 @@ export function FormSection(props: FormSectionProps) {
         </Field>
 
         <Field label="Resume upload" hint="Accepted formats: PDF, DOCX, TXT, or Markdown.">
-          <label className="group mt-2 flex cursor-pointer flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center transition hover:border-teal-300 hover:bg-teal-50/40">
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-sm">↑</span>
+          <label className="group mt-2 flex cursor-pointer flex-col items-center justify-center rounded-[28px] border border-dashed border-slate-400/80 bg-stone-50/90 px-6 py-9 text-center shadow-inner transition hover:border-amber-400 hover:bg-amber-50/60">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-sm transition group-hover:-translate-y-0.5">↑</span>
             <span className="mt-4 text-base font-semibold text-slate-900">{resumeFile ? resumeFile.name : "Choose a resume file"}</span>
-            <span className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+            <span className="mt-2 max-w-md text-sm leading-6 text-slate-600">
               {resumeFile ? "Selected and ready for parsing." : "Drop a file here or click to browse. Keep this input focused on one resume only."}
             </span>
             <input
@@ -61,17 +61,18 @@ export function FormSection(props: FormSectionProps) {
         </Field>
 
         {errors.length > 0 ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-rose-700">
+          <div className="rounded-[24px] border border-rose-300 bg-rose-50 px-4 py-4 text-sm leading-6 text-rose-800">
             {errors.map((error) => (
               <p key={error}>• {error}</p>
             ))}
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50/80 p-4 md:flex-row md:items-center md:justify-between">
+        <div className="grid gap-4 rounded-[28px] border border-slate-200 bg-stone-50/75 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
           <div>
-            <p className="text-sm font-semibold text-slate-900">Primary action</p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Primary action</p>
+            <p className="mt-2 text-lg font-semibold text-slate-950">Find contacts and generate editable draft emails.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
               Public web only. If fewer than five valid contacts are found, the app returns fewer and explains why.
             </p>
           </div>
@@ -86,11 +87,11 @@ export function FormSection(props: FormSectionProps) {
 
 function Field({ label, hint, children }: { label: string; hint: string; children: ReactNode }) {
   return (
-    <label className="block text-sm font-medium text-slate-900">
+    <label className="block">
       <div className="flex items-center justify-between gap-3">
-        <span>{label}</span>
+        <span className="text-sm font-semibold text-slate-950">{label}</span>
       </div>
-      <p className="mt-1 text-sm font-normal leading-6 text-slate-500">{hint}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{hint}</p>
       {children}
     </label>
   );
