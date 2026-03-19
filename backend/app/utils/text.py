@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import Counter
@@ -86,6 +87,15 @@ def safe_json(value: object) -> str:
     return json.dumps(value, ensure_ascii=True, indent=2)
 
 
+def stable_cache_key(prefix: str, *parts: object) -> str:
+    serialized = "||".join(
+        json.dumps(part, ensure_ascii=True, sort_keys=True) if not isinstance(part, str) else normalize_whitespace(part)
+        for part in parts
+    )
+    digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+    return f"{prefix}:{digest}"
+
+
 def word_overlap_score(left: str, right: str) -> float:
     left_tokens = tokenize(left)
     right_tokens = tokenize(right)
@@ -106,4 +116,3 @@ def top_keywords(text: str, limit: int = 12) -> list[str]:
     counts = Counter(tokens)
     ranked = [word for word, _ in counts.most_common(limit)]
     return ranked
-

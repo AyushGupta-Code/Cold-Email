@@ -92,6 +92,12 @@ Cold-Email/
 
 ## Exact setup commands
 
+### 0. Install Ollama
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+``` 
+
 ### 1. Clone or enter the repo
 
 ```bash

@@ -1,6 +1,16 @@
+export interface ContactEvidence {
+  source_url: string;
+  source_type: "search_snippet" | "page";
+  quoted_text: string;
+}
+
 export interface ScoreBreakdown {
   company_match: number;
   title_relevance: number;
+  us_location_confidence?: number;
+  evidence_strength?: number;
+  profile_quality?: number;
+  email_bonus?: number;
   us_confidence: number;
   source_confidence: number;
   public_email_bonus: number;
@@ -10,6 +20,7 @@ export interface ScoreBreakdown {
 
 export interface ContactCandidate {
   id?: number;
+  name?: string | null;
   full_name: string;
   title: string;
   location: string;
@@ -17,10 +28,19 @@ export interface ContactCandidate {
   profile_url: string;
   public_email?: string | null;
   source_urls: string[];
-  evidence: string[];
+  evidence: ContactEvidence[];
+  warnings?: string[];
   score: number;
   score_breakdown: ScoreBreakdown;
   is_us_based: boolean;
+}
+
+export interface ContactSearchDebug {
+  queries_generated: string[];
+  urls_considered: number;
+  pages_fetched: number;
+  candidates_extracted: number;
+  candidates_after_filtering: number;
 }
 
 export interface GeneratedEmailPayload {
@@ -59,6 +79,7 @@ export interface AnalyzeResponse {
   contacts: ContactCandidate[];
   generated_emails: GeneratedEmailPayload[];
   warnings: string[];
+  debug?: ContactSearchDebug;
 }
 
 export interface RuntimeSettingsPayload {
@@ -97,4 +118,3 @@ export interface SettingsTestResponse {
   message: string;
   details: Record<string, unknown>;
 }
-

@@ -12,6 +12,7 @@ from app.models.entities import Contact
 from app.schemas.api import (
     AnalyzeResponse,
     ContactCandidate,
+    ContactSearchResponse,
     GeneratedEmailPayload,
     HealthResponse,
     RegenerateEmailRequest,
@@ -117,12 +118,17 @@ async def analyze(
     job_summary = build_job_profile(company_name, position, job_description)
     job_row, _ = create_job_and_resume(db, job_summary, resume_file.filename or "resume.txt", raw_text, resume_summary)
 
-    contacts, discovery_warnings = discover_contacts(job_summary, db, effective_settings)
-    created_contacts = create_contacts(db, job_row.id, contacts)
+    discovery = discover_contacts(job_summary, resume_summary, db, effective_settings)
+    created_contacts = create_contacts(db, job_row.id, discovery.contacts)
+    contact_warning_map = {
+        (item.profile_url, item.full_name or item.name or ""): item.warnings
+        for item in discovery.contacts
+    }
 
     api_contacts = [
         ContactCandidate(
             id=row.id,
+            name=row.full_name,
             full_name=row.full_name,
             title=row.title,
             location=row.location,
@@ -131,6 +137,12 @@ async def analyze(
             public_email=row.public_email,
             source_urls=row.source_urls,
             evidence=row.evidence,
+            profile_picture_url=row.profile_picture_url,
+            profile_picture_source_url=row.profile_picture_source_url,
+            profile_picture_confidence=row.profile_picture_confidence or 0.0,
+            profile_picture_evidence=row.profile_picture_evidence or [],
+            has_profile_picture=row.has_profile_picture,
+            warnings=contact_warning_map.get((row.profile_url, row.full_name), []),
             score=row.score,
             score_breakdown=row.score_breakdown,
             is_us_based=row.is_us_based,
@@ -154,14 +166,37 @@ async def analyze(
         for row in created_emails
     ]
 
-    warnings = resume_warnings + discovery_warnings
+    warnings = resume_warnings + discovery.warnings
     return AnalyzeResponse(
         normalized_job_summary=job_summary,
         parsed_resume_summary=resume_summary,
         contacts=api_contacts,
         generated_emails=api_emails,
         warnings=warnings,
+        debug=discovery.debug,
     )
+
+
+@router.post("/contact-search", response_model=ContactSearchResponse)
+async def contact_search(
+    company_name: Annotated[str, Form(...)],
+    position: Annotated[str, Form(...)],
+    job_description: Annotated[str, Form(...)],
+    resume_file: Annotated[UploadFile, File(...)],
+    settings_json: str | None = Form(default=None),
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> ContactSearchResponse:
+    if not company_name.strip() or not position.strip() or not job_description.strip():
+        raise HTTPException(status_code=422, detail="Company, position, and job description are required.")
+
+    effective_settings = merge_settings(settings, parse_runtime_settings(settings_json))
+    content = await resume_file.read()
+    _, resume_summary, resume_warnings = parse_resume_bytes(resume_file.filename or "resume.txt", content)
+    job_summary = build_job_profile(company_name, position, job_description)
+    discovery = discover_contacts(job_summary, resume_summary, db, effective_settings)
+    discovery.warnings = resume_warnings + discovery.warnings
+    return discovery
 
 
 @router.post("/regenerate-email", response_model=GeneratedEmailPayload)
@@ -177,6 +212,7 @@ def regenerate_email(
         if row:
             contact = ContactCandidate(
                 id=row.id,
+                name=row.full_name,
                 full_name=row.full_name,
                 title=row.title,
                 location=row.location,
@@ -185,6 +221,11 @@ def regenerate_email(
                 public_email=row.public_email,
                 source_urls=row.source_urls,
                 evidence=row.evidence,
+                profile_picture_url=row.profile_picture_url,
+                profile_picture_source_url=row.profile_picture_source_url,
+                profile_picture_confidence=row.profile_picture_confidence or 0.0,
+                profile_picture_evidence=row.profile_picture_evidence or [],
+                has_profile_picture=row.has_profile_picture,
                 score=row.score,
                 score_breakdown=row.score_breakdown,
                 is_us_based=row.is_us_based,

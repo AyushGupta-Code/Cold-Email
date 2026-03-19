@@ -181,7 +181,7 @@ export function HomePage() {
       {results ? (
         <div className="space-y-6 lg:space-y-7">
           <SectionCard
-            eyebrow="Step 3"
+            eyebrow="Results"
             title={`Review results for ${results.normalized_job_summary.company_name}`}
             description={results.normalized_job_summary.concise_summary}
             actions={<StatusBadge label={`${results.contacts.length} contact${results.contacts.length === 1 ? "" : "s"}`} tone="accent" />}
@@ -190,16 +190,17 @@ export function HomePage() {
               contactCount={results.contacts.length}
               verifiedEmailCount={verifiedEmailCount}
               warnings={results.warnings}
+              debug={results.debug}
             />
           </SectionCard>
 
           {results.contacts.length > 0 ? <ExportActions contacts={results.contacts} emails={results.generated_emails} /> : null}
 
           {results.contacts.length === 0 ? (
-            <EmptyState warnings={results.warnings} />
+            <EmptyState warnings={results.warnings} debug={results.debug} />
           ) : (
             <SectionCard
-              eyebrow="Step 4"
+              eyebrow="Contacts"
               title="Review contacts and draft emails"
               description="Primary details stay visible up front, while evidence, source links, and score reasoning are tucked into on-demand disclosure blocks."
             >

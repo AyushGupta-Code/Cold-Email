@@ -1,12 +1,15 @@
+import type { ContactSearchDebug } from "../types/api";
 import { SectionCard } from "./SectionCard";
 import { StatusBadge } from "./StatusBadge";
 
 interface EmptyStateProps {
   warnings: string[];
+  debug?: ContactSearchDebug | null;
 }
 
-export function EmptyState({ warnings }: EmptyStateProps) {
+export function EmptyState({ warnings, debug }: EmptyStateProps) {
   const hasWarnings = warnings.length > 0;
+  const hasDebug = Boolean(debug && (debug.urls_considered || debug.candidates_extracted || debug.candidates_after_filtering));
 
   return (
     <SectionCard
@@ -14,7 +17,7 @@ export function EmptyState({ warnings }: EmptyStateProps) {
       title={hasWarnings ? "No contacts returned yet" : "Run the workflow to populate results"}
       description={
         hasWarnings
-          ? "This usually means public recruiter pages were sparse, location evidence was too weak, or search results were throttled."
+          ? "This usually means search retrieval was thin, evidence was too weak, or the remaining contacts failed company, title, or US validation."
           : "Once the form is submitted, contacts, evidence, draft emails, and export actions will appear here."
       }
       actions={<StatusBadge label={hasWarnings ? `${warnings.length} warnings` : "Awaiting input"} tone={hasWarnings ? "warning" : "neutral"} />}
@@ -32,6 +35,13 @@ export function EmptyState({ warnings }: EmptyStateProps) {
             <PreviewTile title="Evidence" description="Source links and score rationale." />
             <PreviewTile title="Drafts" description="Editable outreach emails and send controls." />
           </div>
+          {hasDebug ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <PreviewTile title="URLs considered" description={String(debug?.urls_considered ?? 0)} />
+              <PreviewTile title="Candidates extracted" description={String(debug?.candidates_extracted ?? 0)} />
+              <PreviewTile title="Candidates kept" description={String(debug?.candidates_after_filtering ?? 0)} />
+            </div>
+          ) : null}
         </div>
         <div className="rounded-[24px] border border-slate-200 bg-white/95 p-5">
           <p className="text-sm font-semibold text-slate-950">{hasWarnings ? "Backend messages" : "What appears after a run"}</p>

@@ -46,14 +46,19 @@ def create_contacts(db: Session, job_id: int, contacts: list[ContactCandidate]) 
     for item in contacts:
         row = Contact(
             job_id=job_id,
-            full_name=item.full_name,
+            full_name=item.full_name or item.name or "",
             title=item.title,
             location=item.location,
             company=item.company,
             profile_url=item.profile_url,
             public_email=item.public_email,
             source_urls=item.source_urls,
-            evidence=item.evidence,
+            evidence=[entry.model_dump() for entry in item.evidence],
+            profile_picture_url=item.profile_picture_url,
+            profile_picture_source_url=item.profile_picture_source_url,
+            profile_picture_confidence=item.profile_picture_confidence,
+            profile_picture_evidence=[entry.model_dump() for entry in item.profile_picture_evidence],
+            has_profile_picture=item.has_profile_picture,
             score=item.score,
             score_breakdown=item.score_breakdown.model_dump(),
             is_us_based=item.is_us_based,
@@ -130,7 +135,7 @@ def log_send_attempt(
     return row
 
 
-def get_cached_search(db: Session, source: str, query: str) -> list[dict[str, Any]] | None:
+def get_cached_artifact(db: Session, source: str, query: str) -> Any | None:
     now = datetime.utcnow()
     statement = (
         select(SearchCache)
@@ -143,7 +148,7 @@ def get_cached_search(db: Session, source: str, query: str) -> list[dict[str, An
     return row.results_json if row else None
 
 
-def cache_search_results(db: Session, source: str, query: str, results: list[dict[str, Any]]) -> None:
+def cache_artifact(db: Session, source: str, query: str, results: Any) -> None:
     db.execute(delete(SearchCache).where(SearchCache.source == source).where(SearchCache.query == query))
     row = SearchCache(
         source=source,
@@ -154,3 +159,13 @@ def cache_search_results(db: Session, source: str, query: str, results: list[dic
     db.add(row)
     db.commit()
 
+
+def get_cached_search(db: Session, source: str, query: str) -> list[dict[str, Any]] | None:
+    cached = get_cached_artifact(db, source, query)
+    return cached if isinstance(cached, list) and cached else None
+
+
+def cache_search_results(db: Session, source: str, query: str, results: list[dict[str, Any]]) -> None:
+    if not results:
+        return
+    cache_artifact(db, source, query, results)

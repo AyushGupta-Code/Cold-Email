@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import random
 import time
 from typing import Any
@@ -73,6 +74,14 @@ def normalize_result_url(url: str) -> str:
         params = parse_qs(parsed.query)
         if "uddg" in params and params["uddg"]:
             return unquote(params["uddg"][0])
+    if "search.yahoo.com" in parsed.netloc or "r.search.yahoo.com" in parsed.netloc:
+        params = parse_qs(parsed.query)
+        for key in ("RU", "ru", "url", "target"):
+            if key in params and params[key]:
+                return unquote(params[key][0])
+        match = re.search(r"/RU=([^/]+)/RK=", parsed.path)
+        if match:
+            return unquote(match.group(1))
     return url
 
 
@@ -96,4 +105,3 @@ def fetch_public_page(url: str, use_playwright_fallback: bool = False) -> tuple[
                 return content, "playwright"
         except Exception:
             return "", "unavailable"
-

@@ -21,6 +21,7 @@ STATE_NAMES = {
 MAJOR_US_METROS = {
     "austin", "seattle", "new york", "san francisco", "boston", "los angeles", "chicago", "atlanta",
     "dallas", "houston", "miami", "denver", "philadelphia", "phoenix", "san diego", "bay area",
+    "washington dc", "dc-baltimore", "silicon valley",
 }
 
 NON_US_HINTS = {
@@ -41,6 +42,9 @@ def assess_us_location(text: str) -> tuple[bool, float, list[str]]:
     if re.search(r"\bu\.?s\.?a?\b", lowered):
         evidence.append("mentions US/USA")
         confidence = max(confidence, 0.9)
+    if re.search(r"\bremote\b", lowered) and re.search(r"\b(united states|u\.?s\.?a?)\b", lowered):
+        evidence.append("mentions remote US")
+        confidence = max(confidence, 0.96)
 
     city_state_match = re.search(r"\b([A-Z][A-Za-z.\- ]+),\s*([A-Z]{2})\b", value)
     if city_state_match and city_state_match.group(2) in STATE_ABBREVIATIONS:
@@ -54,6 +58,10 @@ def assess_us_location(text: str) -> tuple[bool, float, list[str]]:
             break
 
     for metro in MAJOR_US_METROS:
+        if re.search(rf"\b(?:greater\s+)?{re.escape(metro)}(?:\s+city)?(?:\s+metropolitan area|\s+area)\b", lowered):
+            evidence.append(f"matches metro-area pattern: {metro.title()}")
+            confidence = max(confidence, 0.84)
+            break
         if re.search(rf"\b{re.escape(metro)}\b", lowered):
             evidence.append(f"mentions US metro: {metro.title()}")
             confidence = max(confidence, 0.76)
@@ -70,4 +78,3 @@ def assess_us_location(text: str) -> tuple[bool, float, list[str]]:
 def is_us_based(text: str, min_confidence: float = 0.7) -> bool:
     matched, confidence, _ = assess_us_location(text)
     return matched and confidence >= min_confidence
-

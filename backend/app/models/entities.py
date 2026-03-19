@@ -53,7 +53,12 @@ class Contact(Base):
     profile_url: Mapped[str] = mapped_column(String(2048), nullable=False)
     public_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     source_urls: Mapped[list[str]] = mapped_column(JSON, default=list)
-    evidence: Mapped[list[str]] = mapped_column(JSON, default=list)
+    evidence: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    profile_picture_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    profile_picture_source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    profile_picture_confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    profile_picture_evidence: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    has_profile_picture: Mapped[bool] = mapped_column(Boolean, default=False)
     score: Mapped[float] = mapped_column(Float, default=0.0)
     score_breakdown: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     is_us_based: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -110,10 +115,9 @@ class SearchCache(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     source: Mapped[str] = mapped_column(String(50), nullable=False)
     query: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
-    results_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    results_json: Mapped[Any] = mapped_column(JSON, default=list)
     cached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.utcnow() + timedelta(days=2),
     )
-

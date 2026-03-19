@@ -90,7 +90,12 @@ export function ContactCard(props: ContactCardProps) {
                     <p className="font-semibold text-slate-900">Evidence</p>
                     <ul className="mt-2 space-y-2">
                       {contact.evidence.map((item) => (
-                        <li key={item}>• {item}</li>
+                        <li key={`${item.source_url}-${item.quoted_text}`} className="space-y-1">
+                          <p>• {item.quoted_text}</p>
+                          <p className="text-xs text-slate-500">
+                            {item.source_type === "page" ? "Page" : "Snippet"} · {item.source_url}
+                          </p>
+                        </li>
                       ))}
                     </ul>
                   </div>
