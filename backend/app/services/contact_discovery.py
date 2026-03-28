@@ -24,6 +24,7 @@ from app.schemas.api import (
     ResumeSummary,
 )
 from app.services.contact_llm import expand_queries_with_ollama, extract_candidates_with_ollama
+from app.services.scrapedin_adapter import load_scrapedin_contacts
 from app.services.contact_ranker import company_match_score, is_recruiter_like_title, rank_contacts, title_bucket
 from app.services.persistence import cache_artifact, cache_search_results, get_cached_artifact, get_cached_search
 from app.services.us_filter import assess_us_location
@@ -239,7 +240,11 @@ def discover_contacts(
     heuristic_queries = _build_heuristic_queries(job_summary, settings.discovery_query_target_count)
     queries = heuristic_queries
     debug.heuristic_queries_generated = heuristic_queries
-    llm_queries, llm_query_warnings, llm_query_used = expand_queries_with_ollama(job_summary, resume_summary, db, settings)
+    llm_queries: list[str] = []
+    llm_query_warnings: list[str] = []
+    llm_query_used = False
+    if settings.discovery_use_llm_for_contact_search:
+        llm_queries, llm_query_warnings, llm_query_used = expand_queries_with_ollama(job_summary, resume_summary, db, settings)
     debug.llm_queries_generated = llm_queries
     if llm_query_warnings:
         warnings.extend(llm_query_warnings)
@@ -249,17 +254,36 @@ def discover_contacts(
         queries = heuristic_queries[: max(settings.discovery_query_target_count, 24)]
     debug.queries_generated = queries
     _emit_live_progress(settings, f"Starting discovery for {job_summary.company_name} / {job_summary.position}")
-    if llm_queries:
+    if settings.discovery_use_llm_for_contact_search and llm_queries:
         _emit_live_progress(settings, f"LLM generated {len(llm_queries)} query expansions:")
         for index, query in enumerate(llm_queries, start=1):
             _emit_live_progress(settings, f"  [llm {index:02d}] {query}")
-    else:
+    elif settings.discovery_use_llm_for_contact_search:
         _emit_live_progress(settings, "LLM generated 0 query expansions; using heuristic query plan.")
+    else:
+        _emit_live_progress(settings, "LLM query expansion disabled for contact search; using heuristic query plan.")
     _emit_live_progress(settings, f"Running {len(queries)} combined search queries:")
     for index, query in enumerate(queries, start=1):
         _emit_live_progress(settings, f"  [query {index:02d}] {query}")
 
     raw_results: list[dict[str, Any]] = []
+    scrapedin_candidates: list[ExtractedContact] = []
+    if settings.discovery_use_scrapedin:
+        scrapedin_rows, scrapedin_warnings = load_scrapedin_contacts(settings.scrapedin_dataset_path, job_summary)
+        warnings.extend(scrapedin_warnings)
+        for row in scrapedin_rows:
+            candidate = _normalize_extracted_candidate(
+                row,
+                _nullable_str(row.get("profile_url")) or "",
+                "search_snippet",
+                _nullable_str(row.get("title")) or "",
+                job_summary,
+            )
+            if candidate is not None:
+                scrapedin_candidates.append(candidate)
+        if scrapedin_candidates:
+            _emit_live_progress(settings, f"Loaded {len(scrapedin_candidates)} candidates from ScrapedIn dataset.")
+
     mode = settings.discovery_mode.lower()
     if mode not in {"live", "fallback", "mock"}:
         warnings.append(f"Unknown discovery mode '{settings.discovery_mode}', defaulting to live.")
@@ -294,7 +318,7 @@ def discover_contacts(
     debug.pages_fetched = len([page for page in fetched_pages if page.text])
 
     source_documents: dict[tuple[str, str], str] = {}
-    extracted_candidates: list[ExtractedContact] = []
+    extracted_candidates: list[ExtractedContact] = list(scrapedin_candidates)
     llm_extraction_used = False
 
     for result in search_results:
@@ -332,7 +356,7 @@ def discover_contacts(
     if search_results and not extracted_candidates:
         warnings.append("Search results were found, but none contained extractable recruiter contacts with usable evidence.")
 
-    if not llm_query_used or not llm_extraction_used:
+    if settings.discovery_use_llm_for_contact_search and (not llm_query_used or not llm_extraction_used):
         warnings.append(
             "LLM-assisted query expansion or extraction was partially unavailable; heuristic retrieval was used where needed."
         )
@@ -1047,15 +1071,18 @@ def _extract_from_source(
     settings: Settings,
 ) -> tuple[list[ExtractedContact], list[str], bool]:
     warnings: list[str] = []
-    llm_candidates, llm_warnings, used_llm = extract_candidates_with_ollama(
-        source_url=source_url,
-        source_type=source_type,
-        source_text=source_text,
-        job_summary=job_summary,
-        settings=settings,
-        db=db,
-    )
-    warnings.extend(llm_warnings)
+    llm_candidates: list[dict[str, Any]] = []
+    used_llm = False
+    if settings.discovery_use_llm_for_contact_search:
+        llm_candidates, llm_warnings, used_llm = extract_candidates_with_ollama(
+            source_url=source_url,
+            source_type=source_type,
+            source_text=source_text,
+            job_summary=job_summary,
+            settings=settings,
+            db=db,
+        )
+        warnings.extend(llm_warnings)
 
     raw_candidates = llm_candidates or _heuristic_extract_candidates(
         source_url=source_url,

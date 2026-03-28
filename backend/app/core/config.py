@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     discovery_use_playwright_fallback: bool = False
     discovery_log_progress: bool = True
     discovery_linkedin_only: bool = True
+    discovery_use_llm_for_contact_search: bool = False
+    discovery_use_scrapedin: bool = False
+    scrapedin_dataset_path: str = ""
     smtp_enabled: bool = False
     smtp_host: str = ""
     smtp_port: int = 587
