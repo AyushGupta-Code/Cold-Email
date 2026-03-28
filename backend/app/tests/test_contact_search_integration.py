@@ -136,7 +136,7 @@ def test_contact_search_pipeline_with_mocked_search_fetch_and_ollama(monkeypatch
         keywords=["python", "fastapi"],
     )
     resume_summary = ResumeSummary(skills=["Python"], experience_bullets=["Built local recruiter search tooling"])
-    settings = Settings(discovery_mode="live")
+    settings = Settings(discovery_mode="live", discovery_use_llm_for_contact_search=True)
 
     with SessionLocal() as db:
         result = discover_contacts(job_summary, resume_summary, db, settings)
@@ -255,7 +255,7 @@ def test_contact_search_runs_second_fetch_when_first_pass_is_thin(monkeypatch) -
         keywords=["python", "fastapi"],
     )
     resume_summary = ResumeSummary(skills=["Python"], experience_bullets=["Built local recruiter search tooling"])
-    settings = Settings(discovery_mode="live")
+    settings = Settings(discovery_mode="live", discovery_use_llm_for_contact_search=True)
 
     with SessionLocal() as db:
         result = discover_contacts(job_summary, resume_summary, db, settings)

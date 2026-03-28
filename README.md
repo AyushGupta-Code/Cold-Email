@@ -185,10 +185,15 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=mistral
 DISCOVERY_MODE=live
 DISCOVERY_USE_PLAYWRIGHT_FALLBACK=false
+DISCOVERY_USE_LLM_FOR_CONTACT_SEARCH=false
+DISCOVERY_USE_SCRAPEDIN=false
+SCRAPEDIN_DATASET_PATH=
 SMTP_ENABLED=false
 ```
 
 Set `DISCOVERY_MODE=mock` for offline UI development. Mock mode is explicitly labeled in backend warnings so it is not confused with real public data.
+
+To run a ScrapedIn-first flow, set `DISCOVERY_USE_SCRAPEDIN=true` and point `SCRAPEDIN_DATASET_PATH` to a ScrapedIn export (`.csv`, `.tsv`, `.xlsx`, or `.json`). In this mode the contact search pipeline avoids LLM-assisted query expansion/extraction unless you explicitly enable `DISCOVERY_USE_LLM_FOR_CONTACT_SEARCH=true`.
 
 ## API endpoints
 
